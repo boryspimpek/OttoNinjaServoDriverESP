@@ -2,6 +2,8 @@
 
 This repository contains the ESP8266 firmware that creates its own WiFi hotspot, allowing direct control of the Otto Ninja robot without requiring an existing WiFi network. This is the second part of the Otto Ninja control system.
 
+![Robot in action](images/5.jpg)
+
 This project consists of two parts:
 
 - **Python Control Interface** - [OttoNinjaServoDriver](https://github.com/boryspimpek/OttoNinjaServoDriver) - Web interface and movement logic  
