@@ -18,9 +18,13 @@ const bool CONTINUOUS_SERVOS[] = {false, true, false, true}; // LL, LF, RL, RF
 // Pozycje neutralne
 int currentPos[4] = {70, 92, 113, 92}; // LL, LF, RL, RF
 
-// Ustawienia WiFi
-const char* ssid = "xxxx";
-const char* password = "xxxx";
+// Ustawienia Access Point
+const char* ap_ssid = "OttoNinja";      // Nazwa hotspotu
+const char* ap_password = "12345678";       // Hasło (min. 8 znaków)
+IPAddress local_IP(192, 168, 4, 1);        // IP ESP8266
+IPAddress gateway(192, 168, 4, 1);
+IPAddress subnet(255, 255, 255, 0);
+
 WiFiUDP Udp;
 unsigned int localUdpPort = 4210;
 char incomingPacket[255];
@@ -38,19 +42,28 @@ void setup() {
   // Ustaw pozycje neutralne
   moveToNeutral();
 
-  // Łączenie z WiFi
-  Serial.printf("Łączenie z %s ", ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println(" połączono");
-  Serial.print("Adres IP: ");
-  Serial.println(WiFi.localIP());
+  // Konfiguracja Access Point
+  Serial.println("Konfigurowanie Access Point...");
   
+  WiFi.mode(WIFI_AP);
+  WiFi.softAPConfig(local_IP, gateway, subnet);
+  WiFi.softAP(ap_ssid, ap_password);
+  
+  Serial.println("Access Point utworzony!");
+  Serial.print("SSID: ");
+  Serial.println(ap_ssid);
+  Serial.print("Hasło: ");
+  Serial.println(ap_password);
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.softAPIP());
+  
+  // Uruchomienie serwera UDP
   Udp.begin(localUdpPort);
   Serial.printf("Nasłuchiwanie na porcie UDP %d\n", localUdpPort);
+  
+  Serial.println("Robot gotowy do pracy!");
+  Serial.println("Połącz się z siecią WiFi: " + String(ap_ssid));
+  Serial.println("Wysyłaj komendy UDP na adres: " + WiFi.softAPIP().toString() + ":" + String(localUdpPort));
 }
 
 void loop() {
@@ -61,7 +74,10 @@ void loop() {
       incomingPacket[len] = 0;
     }
     
-    Serial.printf("Odebrano %d bajtów: %s\n", packetSize, incomingPacket);
+    Serial.printf("Odebrano %d bajtów od %s: %s\n", 
+                  packetSize, 
+                  Udp.remoteIP().toString().c_str(), 
+                  incomingPacket);
     processCommand(incomingPacket);
   }
 }
